@@ -68,6 +68,9 @@ jobs:
       - run: npm run build
         working-directory: app
   separate-runners:
+    strategy:
+      matrix:
+        check: [lint, test]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -82,41 +85,14 @@ jobs:
           package-manager-cache: false
       - run: npm ci --ignore-scripts
         working-directory: app
-        # TODO: Add a `strategy.matrix` to this job so lint and test each run in
-        # their own job on a separate runner, then replace this placeholder with
-        # one step that runs the check for the current matrix value.
-        # https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations
-        # The steps above already give each runner its own checkout, Node setup
-        # and dependency installation. separate-build already waits for this job.
-        # In the test job, run real tests, then deliberately fail when fail-test
-        # is true. Compare setup overhead and total runner time with the other jobs.
-        strategy:
-              matrix:
-                check: [lint, test]
-            runs-on: ubuntu-latest
-            timeout-minutes: 10
-            permissions:
-              contents: read
-            steps:
-              - uses: actions/checkout@v7.0.1
-                with:
-                  persist-credentials: false
-              - uses: actions/setup-node@v7.1.0
-                with:
-                  node-version: '24'
-                  package-manager-cache: false
-              - run: npm ci --ignore-scripts
-                working-directory: app
-              - name: Run ${{ matrix.check }}
-                run: |
-                  npm run "${{ matrix.check }}"
-                  if [ "${{ matrix.check }}" = "test" ] && [ "${{ inputs.fail-test }}" = "true" ]; then
-                    echo "Deliberately failing the test job"
-                    exit 1
-                  fi
-                working-directory: app
-
-        
+      - name: Run ${{ matrix.check }}
+        run: |
+          npm run "${{ matrix.check }}"
+          if [ "${{ matrix.check }}" = "test" ] && [ "${{ inputs.fail-test }}" = "true" ]; then
+            echo "Deliberately failing the test job"
+            exit 1
+          fi
+        working-directory: app
   separate-build:
     needs: separate-runners
     runs-on: ubuntu-latest
