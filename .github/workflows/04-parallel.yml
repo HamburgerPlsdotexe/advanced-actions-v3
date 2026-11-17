@@ -82,7 +82,6 @@ jobs:
           package-manager-cache: false
       - run: npm ci --ignore-scripts
         working-directory: app
-      - name: Complete isolated checks
         # TODO: Add a `strategy.matrix` to this job so lint and test each run in
         # their own job on a separate runner, then replace this placeholder with
         # one step that runs the check for the current matrix value.
@@ -91,9 +90,33 @@ jobs:
         # and dependency installation. separate-build already waits for this job.
         # In the test job, run real tests, then deliberately fail when fail-test
         # is true. Compare setup overhead and total runner time with the other jobs.
-        run: |
-          echo 'TODO: Run lint and test on separate runners, including the fail-test experiment.' >&2
-          exit 1
+        strategy:
+              matrix:
+                check: [lint, test]
+            runs-on: ubuntu-latest
+            timeout-minutes: 10
+            permissions:
+              contents: read
+            steps:
+              - uses: actions/checkout@v7.0.1
+                with:
+                  persist-credentials: false
+              - uses: actions/setup-node@v7.1.0
+                with:
+                  node-version: '24'
+                  package-manager-cache: false
+              - run: npm ci --ignore-scripts
+                working-directory: app
+              - name: Run ${{ matrix.check }}
+                run: |
+                  npm run "${{ matrix.check }}"
+                  if [ "${{ matrix.check }}" = "test" ] && [ "${{ inputs.fail-test }}" = "true" ]; then
+                    echo "Deliberately failing the test job"
+                    exit 1
+                  fi
+                working-directory: app
+
+        
   separate-build:
     needs: separate-runners
     runs-on: ubuntu-latest
