@@ -8,10 +8,10 @@ import { pathToFileURL } from 'node:url';
 
 export function validateManifest(manifest) {
   if (!/^\d+\.\d+\.\d+$/.test(manifest.version ?? '') ||
-      manifest.asset !== 'codeql-bundle-linux64.tar.zst' ||
-      !/^[a-f0-9]{64}$/.test(manifest.sha256 ?? '') ||
-      !Number.isSafeInteger(manifest.size) || manifest.size <= 0 ||
-      typeof manifest.note !== 'string') {
+    manifest.asset !== 'codeql-bundle-linux64.tar.zst' ||
+    !/^[a-f0-9]{64}$/.test(manifest.sha256 ?? '') ||
+    !Number.isSafeInteger(manifest.size) || manifest.size <= 0 ||
+    typeof manifest.note !== 'string') {
     throw new Error('Invalid CodeQL manifest: expected a release version, Linux x64 asset, SHA-256, byte size and note.');
   }
 }
@@ -75,3 +75,4 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
     await appendFile(process.env.GITHUB_OUTPUT, `archive=${archive}\n`);
   }
 }
+// Testing for an exact hit
