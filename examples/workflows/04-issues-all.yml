@@ -13,3 +13,4 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           EVENT_ACTION: ${{ github.event.action }}
         run: printf 'event=%s activity=%s\n' "$EVENT_NAME" "$EVENT_ACTION"
+#test
